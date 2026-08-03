@@ -1,0 +1,69 @@
+name: ${COMPOSE_PROJECT_NAME:-agent-devcontainer-local}
+
+services:
+  workspace:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+        INSTALL_CODEX: ${INSTALL_CODEX:-true}
+        CODEX_VERSION: ${CODEX_VERSION:-latest}
+        INSTALL_CLAUDE_CODE: ${INSTALL_CLAUDE_CODE:-true}
+        CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-latest}
+        INSTALL_OPENCODE: ${INSTALL_OPENCODE:-true}
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-latest}
+        INSTALL_GITHUB_CLI: ${INSTALL_GITHUB_CLI:-true}
+        EXTRA_APT_PACKAGES: ${EXTRA_APT_PACKAGES:-}
+    init: true
+    command: sleep infinity
+    user: vscode
+    working_dir: /workspaces/workspace
+    environment:
+      TZ: ${CONTAINER_TIMEZONE:-Etc/UTC}
+      CODEX_HOME: /home/vscode/.codex
+      CLAUDE_CONFIG_DIR: /home/vscode/.claude
+      GH_CONFIG_DIR: /home/vscode/.config/gh
+      INSTALL_CODEX: ${INSTALL_CODEX:-true}
+      INSTALL_CLAUDE_CODE: ${INSTALL_CLAUDE_CODE:-true}
+      INSTALL_OPENCODE: ${INSTALL_OPENCODE:-true}
+      INSTALL_GITHUB_CLI: ${INSTALL_GITHUB_CLI:-true}
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-agent-devcontainer-local}
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspaces/workspace
+      - type: volume
+        source: codex-state
+        target: /home/vscode/.codex
+      - type: volume
+        source: claude-state
+        target: /home/vscode/.claude
+      - type: volume
+        source: opencode-data
+        target: /home/vscode/.local/share/opencode
+      - type: volume
+        source: opencode-config
+        target: /home/vscode/.config/opencode
+      - type: volume
+        source: opencode-state
+        target: /home/vscode/.local/state/opencode
+      - type: volume
+        source: github-cli-state
+        target: /home/vscode/.config/gh
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+volumes:
+  codex-state:
+  claude-state:
+  opencode-data:
+  opencode-config:
+  opencode-state:
+  github-cli-state:

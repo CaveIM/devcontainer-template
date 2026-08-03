@@ -1,0 +1,53 @@
+name: Validate template
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Validate scripts, docs, Compose, and whitespace
+        run: make lint
+
+  amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build and start on AMD64
+        run: make build && make start
+      - name: Verify inside the non-root container
+        run: make verify
+      - name: Inspect runtime defaults
+        run: |
+          container_id="$(docker ps --filter label=com.docker.compose.service=workspace --format '{{.ID}}' | head -n 1)"
+          test -n "${container_id}"
+          test "$(docker inspect -f '{{.Config.User}}' "${container_id}")" = vscode
+          test "$(docker inspect -f '{{.HostConfig.Privileged}}' "${container_id}")" = false
+          test "$(docker inspect -f '{{.HostConfig.NetworkMode}}' "${container_id}")" != host
+          ! docker inspect -f '{{range .Mounts}}{{println .Destination}}{{end}}' "${container_id}" | grep -Eq '^(/var/run/docker.sock|/run/docker.sock)$'
+      - name: Stop without deleting state
+        if: always()
+        run: make stop
+
+  arm64:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@e77e8065d9f7ec6abdd9838668cd7b43924dd64d # v3.6.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Build Linux ARM64 image
+        run: docker buildx build --platform linux/arm64 --file .devcontainer/Dockerfile --progress plain .

@@ -1,0 +1,8 @@
+# Container-local defaults. This file is copied only when no config exists.
+# The outer devcontainer is the intended boundary; see SECURITY.md before use.
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+model_reasoning_effort = "medium"
+
+[profiles.plan]
+model_reasoning_effort = "high"

@@ -1,0 +1,11 @@
+{
+  "name": "AI Agent Devcontainer Baseline",
+  "dockerComposeFile": "compose.yml",
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/workspace",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": ".devcontainer/scripts/post-create.sh",
+  "customizations": {}
+}
